@@ -506,9 +506,9 @@ def sau(input_size=(384,512,3),input_size_2=(384,512,1)):
 
     n23,n33 = RDDB(n23,n33,64,128,32)
 
-    n13,n23 = RDDB(n12,n22,32,64,16)
+    n13,n23 = RDDB(n13,n23,32,64,16)
     
-    n33,n43 = RDDB(n32,n42,128,256,64)
+    n33,n43 = RDDB(n33,n43,128,256,64)
 
     n13 = Lambda(lambda x: x * 0.4)(n13)
     n23 = Lambda(lambda x: x * 0.4)(n23)
@@ -566,16 +566,35 @@ def sau(input_size=(384,512,3),input_size_2=(384,512,1)):
 
     
    
+    n34_preinput=Attention_B(n33,n43,128)
+    n34 = Up3(n34_preinput,n43)
+    n34_d = dual_att_blocks(n33,n43,128)
+    n34_t = Concatenate()([n34,n34_d])
+    n34_t = Conv2D(128,kernel_size=(1,1),strides=(1,1),padding='same')(n34_t)
+    n34_2 = BatchNormalization()(n34_t)
+    n34_2 = Activation('relu')(n34_2)
+    n34_2 = Conv2D(128,kernel_size=(3,3),strides=(1,1),padding='same')(n34_2)
+    n34_2 = BatchNormalization()(n34_2)
+    n34_2 = Activation('relu')(n34_2)
+    n34_2 = Conv2D(128,kernel_size=(3,3),strides=(1,1),padding='same')(n34_2)
+    n34 = Add()([n34_2,n34_t])
+    pred4 = Conv2D(1,kernel_size=(1,1),strides=(1,1),padding='same',activation="sigmoid")(n34)
+    pred4 = UpSampling2D(size=(4,4),interpolation='bilinear',name='pred4')(pred4)
+
+    
+   
     n24_preinput =Attention_B(n23,n34,64)
     n24 = Up3(n24_preinput,n34)
-    n24 = Conv2D(64,kernel_size=(1,1),strides=(1,1),padding='same')(n24)
-    n24_2 = BatchNormalization()(n24)
+    n24_d = dual_att_blocks(n23,n34,64)
+    n24_t = Concatenate()([n24,n24_d])
+    n24_t = Conv2D(64,kernel_size=(1,1),strides=(1,1),padding='same')(n24_t)
+    n24_2 = BatchNormalization()(n24_t)
     n24_2 = Activation('relu')(n24_2)
     n24_2 = Conv2D(64,kernel_size=(3,3),strides=(1,1),padding='same')(n24_2)
     n24_2 = BatchNormalization()(n24_2)
     n24_2 = Activation('relu')(n24_2)
     n24_2 = Conv2D(64,kernel_size=(3,3),strides=(1,1),padding='same')(n24_2)
-    n24 = Add()([n24_2,n24])
+    n24 = Add()([n24_2,n24_t])
     pred2 = Conv2D(1,kernel_size=(1,1),strides=(1,1),padding="same" , activation="sigmoid")(n24)
     pred2 = UpSampling2D(size=(2,2),interpolation='bilinear',name='pred2')(pred2)
    
@@ -585,11 +604,11 @@ def sau(input_size=(384,512,3),input_size_2=(384,512,1)):
     n14 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(n14_input)
     n14 = BatchNormalization()(n14)
     n14 = Add()([n14,n14_input])
-    n14 = Concatenate()([n14,edge])
     n14 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(n14)
     x = Conv2D(1,(1,1), strides=(1,1), padding="same",activation='sigmoid',name='x')(n14)
-    model = Model(inputs= [inputs_img,canny],outputs = [x,edge_out,pred2,pred4])
+    model = Model(inputs= [inputs_img,att],outputs = [x,pred2,pred4,pred8])
     return model
+
 def RDDB(x,y,nf1=128,nf2=1212,gc=64,bias=True):
     x1 = Conv2D(filters=gc, kernel_size=3, strides=1,padding='same', bias=bias)(x)
     x1 = LeakyReLU(alpha=0.25)(x1)
