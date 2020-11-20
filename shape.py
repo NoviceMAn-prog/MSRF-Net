@@ -864,27 +864,3 @@ Y_test  =  np.expand_dims(Y_test,axis=3)
 
 
 y_pred,_,_,_ = G.predict([X_test,edge_x_test],batch_size=5)
-y_pred = (y_pred >=0.5).astype(int)
-res = mean_dice_coef(Y_test,y_pred)
-print("dice coef on test set",res)
-def compute_iou(y_pred, y_true):
-     # ytrue, ypred is a flatten vector
-    y_pred = y_pred.flatten()
-    y_true = y_true.flatten()
-    current = confusion_matrix(y_true, y_pred, labels=[0, 1])
-     # compute mean iou
-    recall = np.diag(current) / np.sum(current, axis = 1)
-    precision = np.diag(current) / np.sum(current, axis = 0)
-    intersection = np.diag(current)
-    ground_truth_set = current.sum(axis=1)
-    predicted_set = current.sum(axis=0)
-    union = ground_truth_set + predicted_set - intersection
-    IoU = intersection / union.astype(np.float32)
-    return np.mean(IoU),np.mean(recall),np.mean(precision)
-res = compute_iou(y_pred,Y_test)
-print('iou on test set is ',res[0]," recall is ",res[1]," precision is ",res[2])
-y_pred,_,_,_ = G.predict([X_val,edge_x_val],batch_size=5)
-y_pred = (y_pred >=0.5).astype(int)
-res = mean_dice_coef(Y_val,y_pred)
-
-print("dice coef on our val set",res)
