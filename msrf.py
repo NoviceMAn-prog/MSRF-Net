@@ -549,21 +549,6 @@ def sau(input_size=(384,512,3),input_size_2=(384,512,1)):
     
     
     #########################
-    n34_preinput=Attention_B(n33,n43,128)
-    n34 = Up3(n34_preinput,n43)
-    n34_d = dual_att_blocks(n33,n43,128)
-    n34_t = Concatenate()([n34,n34_d])
-    n34_t = Conv2D(128,kernel_size=(1,1),strides=(1,1),padding='same')(n34_t)
-    n34_2 = BatchNormalization()(n34_t)
-    n34_2 = Activation('relu')(n34_2)
-    n34_2 = Conv2D(128,kernel_size=(3,3),strides=(1,1),padding='same')(n34_2)
-    n34_2 = BatchNormalization()(n34_2)
-    n34_2 = Activation('relu')(n34_2)
-    n34_2 = Conv2D(128,kernel_size=(3,3),strides=(1,1),padding='same')(n34_2)
-    n34 = Add()([n34_2,n34_t])
-    pred4 = Conv2D(1,kernel_size=(1,1),strides=(1,1),padding='same',activation="sigmoid")(n34)
-    pred4 = UpSampling2D(size=(4,4),interpolation='bilinear',name='pred4')(pred4)
-
     
    
     n34_preinput=Attention_B(n33,n43,128)
@@ -779,7 +764,7 @@ def train(epochs, batch_size,output_dir, model_save_dir):
             
 model_save_dir = './model/'
 output_dir = './output/'
-#train(125,4,output_dir,model_save_dir)
+train(125,4,output_dir,model_save_dir)
 test_img_list = glob("../data/isic/test/image/*.jpg")
 test_mask_list = glob("../data/isic/test/mask/*.jpg")
 print(test_img_list)
