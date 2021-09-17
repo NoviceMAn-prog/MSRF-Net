@@ -801,19 +801,18 @@ np.save("Y_test_isic.npy",Y_test)
 np.save("Y_pred_isic.npy",y_pred)
 print("dice coef on test set",res)
 def compute_iou(y_pred, y_true):
-     # ytrue, ypred is a flatten vector
     y_pred = y_pred.flatten()
     y_true = y_true.flatten()
+    intersection = (y_true * y_pred).sum()
+    #intersection = np.sum(intersection)     
+    union = y_true.sum() + y_pred.sum() - intersection
     current = confusion_matrix(y_true, y_pred, labels=[0, 1])
-     # compute mean iou
-    intersection = np.diag(current)
-    ground_truth_set = current.sum(axis=1)
-    predicted_set = current.sum(axis=0)
-    union = ground_truth_set + predicted_set - intersection
-    IoU = intersection / union.astype(np.float32)
-    return np.mean(IoU)
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    precision = tp/(tp+fp)
+    recall = tp/(tp+fn)
+    return (intersection + 1e-15) / (union + 1e-15),precision,recall
 res = compute_iou(y_pred,Y_test)
-print('iou on test set is ',res)
+print('iou on test set is ',res[0]," precision is ",res[1]," recall is ",res[2])
 y_pred,_,_,_ = G.predict([X_val,edge_x_val],batch_size=5)
 y_pred = (y_pred >=0.5).astype(int)
 res = mean_dice_coef(Y_val,y_pred)
