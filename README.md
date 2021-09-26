@@ -10,8 +10,8 @@ This repository provides code for our paper "MSRF-Net: A Multi-Scale Residual Fu
 In   this   work,   we   propose   a   novel   medical   imagesegmentation  architecture,  calledMSRF-Net,  which  aims  toovercome  the  above  limitations.  Our  proposed  MSRF-Netmaintains  high-resolution  representation  throughout  the  pro-cess  which  is  conducive  to  potentially  achieving  high  spatialaccuracy.  The  MSRF-Net  utilizes  a  novel  dual-scale dense fusion (DSDF) block that performs dual scale feature exchangeand  a  sub-network  that  exchanges  multi-scale  features  usingthe  DSDF  block.  The  DSDF  block  takes  two  different  scaleinputs and employs a residual dense block that exchanges in-formation across different scales after each convolutional layerin  their  corresponding  dense  blocks.  The  densely  connectednature  of  blocks  allows  relevant  high-  and  low-level  featuresto be preserved for the final segmentation map prediction. Themulti-scale  information  exchange  in  our  network  preservesboth high- and low-resolution feature representations, therebyproducing  finer,  richer,  and  spatially  accurate  segmentationmaps. The repeated multi-scale fusion helps in enhancing thehigh-resolution  feature  representations  with  the  informationpropagated  by  low-resolution  representations.  Further,  layersof residual networks allow redundant DSDF blocks to die out,and only the most relevant extracted features contribute to thepredicted segmentation maps.
 2.2.)Framework Overview
 ------------------
-![Our Entire MSRF-Net architecture](https://github.com/NoviceMAn-prog/MSRF-Net/blob/main/Fig2_MSRF-Full_arch.pdf)
-![The structure of our DSDF Blocks and MSRF sub-network](https://github.com/NoviceMAn-prog/MSRF-Net/blob/main/Fig2_new.pdf)
+![](Fig2_MSRF-Full_arch.pdf)
+![](Fig2_new.pdf)
 
 
 Data Preparation
