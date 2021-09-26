@@ -31,14 +31,14 @@ python test.py
 ## 4.) Citation
 Please cite our paper if you find the work useful:
 
-`
+```
 @article{srivastava2021msrf,
   title={MSRF-Net: A Multi-Scale Residual Fusion Network for Biomedical Image Segmentation},
   author={Srivastava, Abhishek and Jha, Debesh and Chanda, Sukalpa and Pal, Umapada and Johansen, H{\aa}vard D and Johansen, Dag and Riegler, Michael A and Ali, Sharib and Halvorsen, P{\aa}l},
   journal={arXiv preprint arXiv:2105.07451},
   year={2021}
 }
-`
+```
 
 
 
