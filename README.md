@@ -40,7 +40,7 @@ Please cite our paper if you find the work useful:
 }
 ```
 ## 5.) FAQ
-Please feel free to contact me if you need any advice or guidance in using this work([E-mail](abhisheksrivastava2397@gmail.com)) 
+Please feel free to contact me if you need any advice or guidance in using this work ([E-mail](abhisheksrivastava2397@gmail.com)) 
 
 
 
