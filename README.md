@@ -20,13 +20,13 @@ In   this   work,   we   propose   a   novel   medical   imagesegmentation  arch
 4.) Put masks under directory named "masks"
 
 ## 3.2)Training
-Model architecture is defined in model.py
+Model architecture is defined in `model.py`
 Run the script as:
-python train.py
+`python train.py`
 
 ## 3.2)Testing
 For testing the trained model run:
-python test.py
+`python test.py`
 
 ## 4.) Citation
 Please cite our paper if you find the work useful:
@@ -39,6 +39,8 @@ Please cite our paper if you find the work useful:
   year={2021}
 }
 ```
+## 5.) FAQ
+Please feel free to contact me if you need any advice or guidance in using this work([E-mail](abhisheksrivastava2397@gmail.com)) 
 
 
 
