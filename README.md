@@ -1,4 +1,5 @@
 # MSRF-Net
+This repository provides code for our paper "MSRF-Net: A Multi-Scale Residual Fusion Network for Biomedical Image Segmentation" [a link] (https://arxiv.org/abs/2105.07451)  
 Data Preparation
 1.) make directory named "data/isic"
 
