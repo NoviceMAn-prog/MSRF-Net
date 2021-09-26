@@ -1,4 +1,4 @@
-# 1.) MSRF-Net: A Multi-Scale Residual Fusion Network for Biomedical Image Segmentation
+# MSRF-Net: A Multi-Scale Residual Fusion Network for Biomedical Image Segmentation
 This repository provides code for our paper "MSRF-Net: A Multi-Scale Residual Fusion Network for Biomedical Image Segmentation" ([arxiv version](https://arxiv.org/abs/2105.07451))  
 ## 2.) Overview
 ### 2.1.)Introduction
