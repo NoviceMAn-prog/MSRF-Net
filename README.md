@@ -7,7 +7,7 @@ In   this   work,   we   propose   a   novel   medical   imagesegmentation  arch
 ## 2.2.) DSDF Blocks and MSRF Sub-network
 ![](Fig2_new-page-001.jpg)
 ## 2.3.) Quantitative Results
-
+![](qualitative.png)
 
 ## Data Preparation
 1.) make directory named "data/isic"
