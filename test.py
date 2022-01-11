@@ -28,6 +28,7 @@ from math import sqrt, ceil
 from tqdm import tqdm_notebook as tqdm
 import cv2
 from sklearn.utils import shuffle
+from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 import tifffile as tif
 from model import msrf
