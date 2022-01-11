@@ -1,69 +1,32 @@
 import os
-import re
-import csv
-import json
 from PIL import Image
 from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import os
 from glob import glob
 from PIL import Image
 np.random.seed(123)
-from sklearn.preprocessing import label_binarize
-from sklearn.metrics import confusion_matrix
-import itertools
 import warnings
 import keras
-from keras.utils.np_utils import to_categorical # used for converting labels to one-hot-encoding
-from keras.models import Sequential
-from keras.layers import Dense, Dropout,Input,Average,Conv2DTranspose,SeparableConv2D,dot,UpSampling2D,Add, Flatten,Concatenate,Multiply,Conv2D, MaxPooling2D,Activation,AveragePooling2D, ZeroPadding2D,GlobalAveragePooling2D,multiply,DepthwiseConv2D,ZeroPadding2D,GlobalAveragePooling2D
+from keras.layers import Dense, Dropout,Input,Average,Conv2DTranspose,SeparableConv2D,dot,UpSampling2D,Add, Flatten,Concatenate,Multiply,Conv2D, MaxPooling2D,Activation,AveragePooling2D, ZeroPadding2D,GlobalAveragePooling2D,multiply,DepthwiseConv2D,ZeroPadding2D,GlobalAveragePooling2D,concatenate ,Lambda
+from keras.initializers import RandomNormal
+
 from keras import backend as K
-from keras.layers import concatenate ,Lambda
-import itertools
 from keras.layers.normalization import BatchNormalization
-from keras.optimizers import SGD
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint 
 import tensorflow as tf
 from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ReduceLROnPlateau
-from sklearn.model_selection import train_test_split
-from keras.applications import ResNet50,VGG19,VGG16,DenseNet121,DenseNet169,InceptionResNetV2
-from tensorflow.keras.losses import BinaryCrossentropy,CategoricalCrossentropy
 import numpy as np
-from skimage.morphology import square,binary_erosion,binary_dilation,binary_opening,binary_closing
-from skimage.morphology import erosion, dilation, opening, closing, white_tophat
-from skimage.morphology import black_tophat, skeletonize, convex_hull_image
-from keras.initializers import RandomNormal
 from keras.layers.advanced_activations import LeakyReLU
-from keras.optimizers import RMSprop
-from keras import regularizers
 from keras.models import Model
-from keras.callbacks import ModelCheckpoint
-from math import sqrt, ceil
-from PIL import Image
-import numpy as np
 from tqdm import tqdm_notebook as tqdm
-import tensorflow as tf
 import cv2
-from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
-from tqdm import tqdm
-from glob import glob
 import tifffile as tif
 from sklearn.model_selection import train_test_split
-import os
-import numpy as np
-import cv2
-import tensorflow as tf
-from tensorflow.keras.callbacks import *
 from keras.optimizers import Adam, Nadam
-from tensorflow.keras.metrics import *
 from glob import glob
-from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 import skimage.io
 from skimage.transform import rescale, resize, downscale_local_mean
@@ -72,70 +35,6 @@ gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=1.0)
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session()
-
-def dice_coef(y_true, y_pred):
-    y_true_f = K.flatten(y_true)
-    y_pred = K.cast(y_pred, 'float32')
-    y_pred_f = K.cast(K.greater(K.flatten(y_pred), 0.5), 'float32')
-    intersection = y_true_f * y_pred_f
-    score = 2. * K.sum(intersection) / (K.sum(y_true_f) + K.sum(y_pred_f))
-    return score
-
-def dice_loss(y_true, y_pred):
-    smooth = 1.
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = y_true_f * y_pred_f
-    score = (2. * K.sum(intersection) + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-    return 1. - score
-
-def dice_coefficient_loss(y_true, y_pred):
-    return 1.-dice_coefficient(y_true, y_pred)
-def bce_logdice_loss(y_true, y_pred):
-    return binary_crossentropy(y_true, y_pred) - K.log(1. - dice_loss(y_true, y_pred))
-
-def weighted_bce_loss(y_true, y_pred, weight):
-    epsilon = 1e-7
-    y_pred = K.clip(y_pred, epsilon, 1. - epsilon)
-    logit_y_pred = K.log(y_pred / (1. - y_pred))
-    loss = weight * (logit_y_pred * (1. - y_true) + 
-                     K.log(1. + K.exp(-K.abs(logit_y_pred))) + K.maximum(-logit_y_pred, 0.))
-    return K.sum(loss) / K.sum(weight)
-
-def weighted_dice(y_true, y_pred):
-    smooth = 1.
-    w, m1, m2 = 0.7, y_true, y_pred
-    intersection = (m1 * m2)
-    score = (2. * K.sum(w * intersection) + smooth) / (K.sum(w * m1) + K.sum(w * m2) + smooth)
-    return K.sum(score)
-
-def weighted_dice_loss(y_true, y_pred):
-    smooth = 1.
-    w, m1, m2 = 0.7, y_true, y_pred
-    intersection = (m1 * m2)
-    score = (2. * K.sum(w * intersection) + smooth) / (K.sum(w * m1) + K.sum(w * m2) + smooth)
-    loss = 1. - K.sum(score)
-    return loss
-
-def weighted_bce_dice_loss(y_true, y_pred):
-    y_true = K.cast(y_true, 'float32')
-    y_pred = K.cast(y_pred, 'float32')
-    # if we want to get same size of output, kernel size must be odd
-    averaged_mask = K.pool2d(
-            y_true, pool_size=(50, 50), strides=(1, 1), padding='same', pool_mode='avg')
-    weight = K.ones_like(averaged_mask)
-    w0 = K.sum(weight)
-    weight = 5. * K.exp(-5. * K.abs(averaged_mask - 0.5))
-    w1 = K.sum(weight)
-    weight *= (w0 / w1)
-    loss = weighted_bce_loss(y_true, y_pred, weight) + dice_loss(y_true, y_pred)
-    return loss
-def dice_coefficient(y_true, y_pred, smooth=1):
-    y_true_f = K.flatten(y_true[:,:,:,0])
-    y_pred_f = K.flatten(y_pred[:,:,:,0])
-    intersection = K.sum(y_true_f * y_pred_f)
-    d1 =  (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-    return d1
 def spatial_att_block(x,intermediate_channels):
     out = Conv2D(intermediate_channels,kernel_size=(1,1),strides=(1,1),padding='same')(x)
     out = BatchNormalization()(out)
@@ -181,7 +80,6 @@ def gsc(input_features,gating_features,in_channels,out_channels,kernel_size=1,st
     x = Conv2D(1,kernel_size=(1,1),strides=1,padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation('sigmoid')(x)
-    #x = sigmoid(x)
     return x
 
 def se_block(in_block, ch, ratio=16):
@@ -197,22 +95,11 @@ def Attention_B(X, G, k):
     Phi = Conv2D(k, (1,1), strides =(1,1), padding='same', use_bias=True)(G)
    
     ADD = Add()([theta, Phi])
-   
-    #ADD = LeakyReLU(alpha=0.1)(ADD)
     ADD = Activation('relu')(ADD)
-   
-    #Psi = Conv2D(FL,(1,1), strides = (1,1), padding="same",kernel_initializer=init)(ADD)
     Psi = Conv2D(1,(1,1), strides = (1,1), padding="same",kernel_initializer=init)(ADD)
     Psi = Activation('sigmoid')(Psi)
     Up = Conv2DTranspose(1, (2,2), strides=(2, 2), padding='valid')(Psi)
-   
-    #Psi = Activation('tanh')(Psi)
-   
-    #Up = Conv2DTranspose(FL, (2,2), strides=(2, 2), padding='valid')(Psi)
-   
     Final = Multiply()([X, Up])
-    #Final = Conv2D(1, (1,1), strides = (1,1), padding="same",kernel_initializer=init)(Final)
-    #Final = Conv2D(FL, (1,1), strides = (1,1), padding="same",kernel_initializer=init)(Final)
     Final = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-5)(Final)
     print(Final.shape)
     return Final
@@ -260,41 +147,6 @@ def DSup1(x, var):
     return d
 
 #Keras
-ALPHA = 0.5
-BETA = 0.5
-GAMMA=1
-
-
-def TverskyLoss(targets, inputs, alpha=ALPHA, beta=BETA, smooth=1e-6):
-        
-        #flatten label and prediction tensors
-        inputs = K.flatten(inputs)
-        targets = K.flatten(targets)
-        
-        #True Positives, False Positives & False Negatives
-        TP = K.sum((inputs * targets))
-        FP = K.sum(((1-targets) * inputs))
-        FN = K.sum((targets * (1-inputs)))
-       
-        Tversky = (TP + smooth) / (TP + alpha*FP + beta*FN + smooth)  
-        
-        return 1 - Tversky
-
-def FocalTverskyLoss(targets, inputs, alpha=ALPHA, beta=BETA, gamma=GAMMA, smooth=1e-6):
-    
-        #flatten label and prediction tensors
-        inputs = K.flatten(inputs)
-        targets = K.flatten(targets)
-        
-        #True Positives, False Positives & False Negatives
-        TP = K.sum((inputs * targets))
-        FP = K.sum(((1-targets) * inputs))
-        FN = K.sum((targets * (1-inputs)))
-               
-        Tversky = (TP + smooth) / (TP + alpha*FP + beta*FN + smooth)  
-        FocalTversky = K.pow((1 - Tversky), gamma)
-        
-        return FocalTversky
 
 
 def msrf(input_size=(256,256,3),input_size_2=(256,256,1)):
@@ -376,19 +228,19 @@ def msrf(input_size=(256,256,3),input_size_2=(256,256,1)):
     n13,n23 = RDDB(n12,n22,32,64,16)
     
     n33,n43 = RDDB(n32,n42,128,256,64)
-
-    n23,n33 = RDDB(n23,n33,64,128,32)
-
-    n13,n23 = RDDB(n13,n23,32,64,16)
     
-    n33,n43 = RDDB(n33,n43,128,256,64)
-
+    n23,n33 = RDDB(n23,n33,64,128,32)
+    
+    n13,n23 = RDDB(n12,n22,32,64,16)
+    
+    n33,n43 = RDDB(n32,n42,128,256,64)
+    
     n13 = Lambda(lambda x: x * 0.4)(n13)
     n23 = Lambda(lambda x: x * 0.4)(n23)
     n33 = Lambda(lambda x: x * 0.4)(n33)
     n43 = Lambda(lambda x: x * 0.4)(n43)
-
-   
+    
+    
     n13,n23 = Add()([n11,n13]),Add()([n21,n23])
     n33,n43 = Add()([n31,n33]),Add()([n41,n43])
 
@@ -464,7 +316,7 @@ def msrf(input_size=(256,256,3),input_size_2=(256,256,1)):
     n14 = Add()([n14,n14_input])
     n14 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(n14)
     x = Conv2D(1,(1,1), strides=(1,1), padding="same",activation='sigmoid',name='x')(n14)
-    model = Model(inputs= [inputs_img,att],outputs = [x,pred2,pred4,pred8])
+    model = Model(inputs= [inputs_img,canny],outputs = [x,edge_out,pred2,pred4])
     return model
 
 def RDDB(x,y,nf1=128,nf2=1212,gc=64,bias=True):
