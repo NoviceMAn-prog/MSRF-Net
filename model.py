@@ -264,7 +264,7 @@ def msrf(input_size=(256,256,3),input_size_2=(256,256,1)):
     ss = Conv2D(1,kernel_size=(1,1),padding='same')(ss)
     edge_out = Activation('sigmoid',name='edge_out')(ss)
     #######canny edge
-    #canny = cv2.Canny(np.asarray(inputs),10,100)
+    canny = cv2.Canny(np.asarray(inputs),10,100)
     cat = Concatenate()([edge_out,canny])
     cw = Conv2D(1,kernel_size=(1,1),padding='same')(cat)
     acts = Activation('sigmoid')(cw)
@@ -314,8 +314,10 @@ def msrf(input_size=(256,256,3),input_size_2=(256,256,1)):
     n14 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(n14_input)
     n14 = BatchNormalization()(n14)
     n14 = Add()([n14,n14_input])
+    n14 = Concatenate()([n14,edge])
     n14 = Conv2D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(n14)
     x = Conv2D(1,(1,1), strides=(1,1), padding="same",activation='sigmoid',name='x')(n14)
+    
     model = Model(inputs= [inputs_img,canny],outputs = [x,edge_out,pred2,pred4])
     return model
 
