@@ -25,12 +25,10 @@ from keras.initializers import RandomNormal
 from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Model
 from math import sqrt, ceil
-from tqdm import tqdm_notebook as tqdm
 import cv2
 from sklearn.utils import shuffle
 from tqdm import tqdm
 import tifffile as tif
-from model import msrf
 from model import *
 from tensorflow.keras.callbacks import *
 import skimage.io
@@ -90,7 +88,7 @@ Y_val  =  np.expand_dims(Y_val,axis=3)
 
 def train(epochs, batch_size,output_dir, model_save_dir):
     
-    batch_count = int(len(train_x) / batch_size)
+    batch_count = ceil(len(train_x) / batch_size)
     max_val_dice= -1
     G = msrf()
     G.summary()
@@ -99,7 +97,7 @@ def train(epochs, batch_size,output_dir, model_save_dir):
     for e in range(1, epochs+1):
         print ('-'*15, 'Epoch %d' % e, '-'*15,batch_size)
         #sp startpoint
-        for sp in range(0,batch_count,1):
+        for sp in tqdm(range(0,batch_count,1), desc="Batches"):
             if (sp+1)*batch_size>len(train_x):
                 batch_end = len(train_x)
             else:
@@ -108,14 +106,14 @@ def train(epochs, batch_size,output_dir, model_save_dir):
             Y_batch_list = train_y[(sp*batch_size):batch_end]
             X_tot = [get_image(sample_file,256,256) for sample_file in X_batch_list]
             X_batch,edge_x = [],[]
-            for i in range(0,batch_size):
+            for i in range(len(X_batch_list)):
                 X_batch.append(X_tot[i][0])
                 edge_x.append(X_tot[i][1])
             X_batch = np.array(X_batch).astype(np.float32)
             edge_x = np.array(edge_x).astype(np.float32)
             Y_tot = [get_image(sample_file,256,256, gray=True) for sample_file in Y_batch_list]
             Y_batch,edge_y = [],[]
-            for i in range(0,batch_size):
+            for i in range(len(X_batch_list)):
                 Y_batch.append(Y_tot[i][0])
                 edge_y.append(Y_tot[i][1])
             Y_batch = np.array(Y_batch).astype(np.float32)
