@@ -11,8 +11,8 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
-from keras import backend as K
-from keras.optimizers import Adam, Nadam
+from tensorflow.keras import backend as K
+from tensorflow.keras.optimizers import Adam, Nadam
 
 
 def el(y_true, y_pred):

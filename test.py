@@ -1,19 +1,15 @@
+import itertools
 import os
+import sys
+import warnings
 from glob import glob
+from math import ceil, sqrt
 from os import listdir
 from os.path import isfile, join
 
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
-
-np.random.seed(123)
-import itertools
-import warnings
-from math import ceil, sqrt
-
 import cv2
 import keras
+import matplotlib.pyplot as plt
 import numpy as np
 import skimage.io
 import tensorflow as tf
@@ -48,27 +44,28 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model, Sequential
 from keras.optimizers import SGD, Adam, RMSprop
+from PIL import Image
 from skimage.color import rgb2gray
 from skimage.transform import downscale_local_mean, rescale, resize
+from skimage.util.shape import view_as_windows
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from tensorflow.keras.callbacks import *
 from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
-from tqdm import tqdm
-from tqdm import tqdm_notebook as tqdm
 
 from loss import *
 from model import *
 from model import msrf
 from utils import *
 
-gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=1.0)
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-sess = tf.compat.v1.Session()
-
-from glob import glob
+gpus = tf.config.experimental.list_physical_devices("GPU")
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 
 test_img_list = glob("data/kdsb/test/images/*.jpg")
 test_mask_list = glob("data/kdsb/test/masks/*.jpg")

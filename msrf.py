@@ -19,55 +19,11 @@ from glob import glob
 from math import ceil, sqrt
 
 import cv2
-import keras
 import numpy as np
 import skimage.io
 import tensorflow as tf
+import tensorflow.keras as keras
 import tifffile as tif
-from keras import backend as K
-from keras import regularizers
-from keras.applications import (
-    VGG16,
-    VGG19,
-    DenseNet121,
-    DenseNet169,
-    InceptionResNetV2,
-    ResNet50,
-)
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint, ReduceLROnPlateau
-from keras.initializers import RandomNormal
-from keras.layers import (
-    Activation,
-    Add,
-    Average,
-    AveragePooling2D,
-    Concatenate,
-    Conv2D,
-    Conv2DTranspose,
-    Dense,
-    DepthwiseConv2D,
-    Dropout,
-    Flatten,
-    GlobalAveragePooling2D,
-    Input,
-    Lambda,
-    MaxPooling2D,
-    Multiply,
-    SeparableConv2D,
-    UpSampling2D,
-    ZeroPadding2D,
-    concatenate,
-    dot,
-    multiply,
-)
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.normalization import BatchNormalization
-from keras.models import Model, Sequential
-from keras.optimizers import SGD, Adam, Nadam, RMSprop
-from keras.preprocessing.image import ImageDataGenerator
-from keras.utils.np_utils import (
-    to_categorical,  # used for converting labels to one-hot-encoding
-)
 from PIL import Image
 from skimage.color import rgb2gray
 from skimage.morphology import (
@@ -90,16 +46,65 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
 from sklearn.utils import shuffle
+from tensorflow.keras import backend as K
+from tensorflow.keras import regularizers
+from tensorflow.keras.applications import (
+    VGG16,
+    VGG19,
+    DenseNet121,
+    DenseNet169,
+    InceptionResNetV2,
+    ResNet50,
+)
 from tensorflow.keras.callbacks import *
+from tensorflow.keras.callbacks import (
+    LearningRateScheduler,
+    ModelCheckpoint,
+    ReduceLROnPlateau,
+)
+from tensorflow.keras.initializers import RandomNormal
+from tensorflow.keras.layers import (
+    Activation,
+    Add,
+    Average,
+    AveragePooling2D,
+    Concatenate,
+    Conv2D,
+    Conv2DTranspose,
+    Dense,
+    DepthwiseConv2D,
+    Dropout,
+    Flatten,
+    GlobalAveragePooling2D,
+    Input,
+    Lambda,
+    LeakyReLU,
+    MaxPooling2D,
+    Multiply,
+    SeparableConv2D,
+    UpSampling2D,
+    ZeroPadding2D,
+    concatenate,
+    dot,
+    multiply,
+)
+from tensorflow.keras.layers.normalization import BatchNormalization
 from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 from tensorflow.keras.metrics import *
-from tqdm import tqdm
-from tqdm import tqdm_notebook as tqdm
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.optimizers import SGD, Adam, Nadam, RMSprop
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.utils.np_utils import (
+    to_categorical,  # used for converting labels to one-hot-encoding
+)
 
-gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=1.0)
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-sess = tf.compat.v1.Session()
+gpus = tf.config.experimental.list_physical_devices("GPU")
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 
 
 def create_dir(path):
@@ -650,62 +655,62 @@ def sau(input_size=(384, 512, 3), input_size_2=(384, 512, 1)):
 
 
 def RDDB(x, y, nf1=128, nf2=1212, gc=64, bias=True):
-    x1 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(x)
+    x1 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(x)
     x1 = LeakyReLU(alpha=0.25)(x1)
 
-    y1 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(y)
+    y1 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(y)
     y1 = LeakyReLU(alpha=0.25)(y)
 
-    x1c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(x)
+    x1c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(x)
     x1c = LeakyReLU(alpha=0.25)(x1c)
-    y1t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(y)
+    y1t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(y)
     y1t = LeakyReLU(alpha=0.25)(y1t)
 
     x2_input = concatenate([x, x1, y1t], axis=-1)
-    x2 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(x2_input)
+    x2 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(x2_input)
     x2 = LeakyReLU(alpha=0.25)(x2)
 
     y2_input = concatenate([y, y1, x1c], axis=-1)
-    y2 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(y2_input)
+    y2 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(y2_input)
     y2 = LeakyReLU(alpha=0.25)(y2)
 
-    x2c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(x1)
+    x2c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(x1)
     x2c = LeakyReLU(alpha=0.25)(x2c)
-    y2t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(y1)
+    y2t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(y1)
     y2t = LeakyReLU(alpha=0.25)(y2t)
 
     x3_input = concatenate([x, x1, x2, y2t], axis=-1)
-    x3 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(x3_input)
+    x3 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(x3_input)
     x3 = LeakyReLU(alpha=0.25)(x3)
 
     y3_input = concatenate([y, y1, y2, x2c], axis=-1)
-    y3 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(y3_input)
+    y3 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(y3_input)
     y3 = LeakyReLU(alpha=0.25)(y3)
 
-    x3c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(x3)
+    x3c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(x3)
     x3c = LeakyReLU(alpha=0.25)(x3c)
-    y3t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(y3)
+    y3t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(y3)
     y3t = LeakyReLU(alpha=0.25)(y3t)
 
     x4_input = concatenate([x, x1, x2, x3, y3t], axis=-1)
-    x4 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(x4_input)
+    x4 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(x4_input)
     x4 = LeakyReLU(alpha=0.25)(x4)
 
     y4_input = concatenate([y, y1, y2, y3, x3c], axis=-1)
-    y4 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", bias=bias)(y4_input)
+    y4 = Conv2D(filters=gc, kernel_size=3, strides=1, padding="same", use_bias=bias)(y4_input)
     y4 = LeakyReLU(alpha=0.25)(y4)
 
-    x4c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(x4)
+    x4c = Conv2D(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(x4)
     x4c = LeakyReLU(alpha=0.25)(x4c)
-    y4t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", bias=bias)(y4)
+    y4t = Conv2DTranspose(filters=gc, kernel_size=3, strides=2, padding="same", use_bias=bias)(y4)
     y4t = LeakyReLU(alpha=0.25)(y4t)
 
     x5_input = concatenate([x, x1, x2, x3, x4, y4t], axis=-1)
-    x5 = Conv2D(filters=nf1, kernel_size=3, strides=1, padding="same", bias=bias)(x5_input)
+    x5 = Conv2D(filters=nf1, kernel_size=3, strides=1, padding="same", use_bias=bias)(x5_input)
     x5 = LeakyReLU(alpha=0.25)(x5)
 
     y5_input = concatenate([y, y1, y2, y3, y4, x4c], axis=-1)
-    y5 = Conv2D(filters=nf2, kernel_size=3, strides=1, padding="same", bias=bias)(y5_input)
+    y5 = Conv2D(filters=nf2, kernel_size=3, strides=1, padding="same", use_bias=bias)(y5_input)
     y5 = LeakyReLU(alpha=0.25)(y5)
 
     x5 = Lambda(lambda x: x * 0.4)(x5)
@@ -882,7 +887,7 @@ def compute_iou(y_pred, y_true):
     # intersection = np.sum(intersection)
     current = confusion_matrix(y_true, y_pred, labels=[0, 1])
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-    precision = tp/(tp+fp)
+    precision = tp / (tp + fp)
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     return (intersection + 1e-15) / (union + 1e-15), precision, recall
