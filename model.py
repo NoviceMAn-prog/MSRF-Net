@@ -262,10 +262,10 @@ def msrf(input_size=(256, 256, 3), input_size_2=(256, 256, 1)):
 
     n23, n33 = RDDB(n23, n33, 64, 128, 32)
 
-    n13, n23 = RDDB(n12, n22, 32, 64, 16)
+    n13, n23 = RDDB(n13, n23, 32, 64, 16)
 
-    n33, n43 = RDDB(n32, n42, 128, 256, 64)
-    
+    n33, n43 = RDDB(n33, n43, 128, 256, 64)
+
     n13 = Lambda(lambda x: x * 0.4)(n13)
     n23 = Lambda(lambda x: x * 0.4)(n23)
     n33 = Lambda(lambda x: x * 0.4)(n33)
