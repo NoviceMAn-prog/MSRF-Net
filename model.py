@@ -265,7 +265,7 @@ def msrf(input_size=(256, 256, 3), input_size_2=(256, 256, 1)):
     n13, n23 = RDDB(n12, n22, 32, 64, 16)
 
     n33, n43 = RDDB(n32, n42, 128, 256, 64)
-
+    
     n13 = Lambda(lambda x: x * 0.4)(n13)
     n23 = Lambda(lambda x: x * 0.4)(n23)
     n33 = Lambda(lambda x: x * 0.4)(n33)
@@ -293,7 +293,7 @@ def msrf(input_size=(256, 256, 3), input_size_2=(256, 256, 1)):
     ss = Conv2D(1, kernel_size=(1, 1), padding="same")(ss)
     edge_out = Activation("sigmoid", name="edge_out")(ss)
     #######canny edge
-    canny = cv2.Canny(np.asarray(inputs), 10, 100)
+    # canny = cv2.Canny(np.asarray(inputs), 10, 100)
     cat = Concatenate()([edge_out, canny])
     cw = Conv2D(1, kernel_size=(1, 1), padding="same")(cat)
     acts = Activation("sigmoid")(cw)
